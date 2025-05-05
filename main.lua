@@ -1,4 +1,3 @@
-loadstring([[
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local UserInputService = game:GetService("UserInputService")
@@ -7,11 +6,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SETTINGS_FILE = "egg_autocollect_settings.txt"
 local running = false
 
+-- Load saved state
 pcall(function()
 	local state = readfile(SETTINGS_FILE)
 	running = (state == "true")
 end)
 
+-- GUI Setup
 local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
 ScreenGui.Name = "EggCollectorGui"
 ScreenGui.ResetOnSpawn = false
@@ -70,6 +71,7 @@ ToggleButton.MouseButton1Click:Connect(function()
 
 			for _, part in pairs(workspace:GetDescendants()) do
 				if not running then break end
+
 				if part:IsA("MeshPart") and part.Name:lower():match("^egg%s*%d*$") then
 					local prompt = part:FindFirstChildOfClass("ProximityPrompt")
 					if prompt and prompt.Enabled then
@@ -82,6 +84,7 @@ ToggleButton.MouseButton1Click:Connect(function()
 				end
 			end
 
+			-- Reconnect
 			for _, v in pairs(ReplicatedStorage:WaitForChild("d8L"):GetChildren()) do
 				if v:IsA("RemoteEvent") then
 					pcall(function()
@@ -97,7 +100,7 @@ ToggleButton.MouseButton1Click:Connect(function()
 	end
 end)
 
+-- Auto-run if saved state was ON
 if running then
 	ToggleButton:Activate()
 end
-]])()
