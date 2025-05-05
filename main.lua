@@ -6,13 +6,19 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SETTINGS_FILE = "egg_autocollect_settings.txt"
 local running = false
 
--- Load saved state
+-- Load saved toggle state
 pcall(function()
 	local state = readfile(SETTINGS_FILE)
 	running = (state == "true")
 end)
 
--- GUI Setup
+local function SaveSetting(state)
+	pcall(function()
+		writefile(SETTINGS_FILE, tostring(state))
+	end)
+end
+
+-- GUI
 local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
 ScreenGui.Name = "EggCollectorGui"
 ScreenGui.ResetOnSpawn = false
@@ -53,9 +59,37 @@ UserInputService.InputBegan:Connect(function(input, gpe)
 	end
 end)
 
-function SaveSetting(state)
-	pcall(function()
-		writefile(SETTINGS_FILE, tostring(state))
+local function StartCollect()
+	task.spawn(function()
+		local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+		local HRP = Character:WaitForChild("HumanoidRootPart")
+
+		for _, part in pairs(workspace:GetDescendants()) do
+			if not running then break end
+
+			if part:IsA("MeshPart") and part.Name:lower():match("^egg%s*%d*$") then
+				local prompt = part:FindFirstChildOfClass("ProximityPrompt")
+				if prompt and prompt.Enabled then
+					HRP.CFrame = part.CFrame + Vector3.new(0, 3, 0)
+					task.wait(0.3)
+					fireproximityprompt(prompt)
+					repeat task.wait(0.1) until not prompt.Enabled or not prompt:IsDescendantOf(game)
+					task.wait(0.3)
+				end
+			end
+		end
+
+		for _, v in pairs(ReplicatedStorage:WaitForChild("d8L"):GetChildren()) do
+			if v:IsA("RemoteEvent") then
+				pcall(function()
+					v:FireServer()
+				end)
+			end
+		end
+
+		running = false
+		ToggleButton.Text = "Auto Collect: OFF"
+		SaveSetting(running)
 	end)
 end
 
@@ -63,44 +97,12 @@ ToggleButton.MouseButton1Click:Connect(function()
 	running = not running
 	SaveSetting(running)
 	ToggleButton.Text = "Auto Collect: " .. (running and "ON" or "OFF")
-
 	if running then
-		task.spawn(function()
-			local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-			local HRP = Character:WaitForChild("HumanoidRootPart")
-
-			for _, part in pairs(workspace:GetDescendants()) do
-				if not running then break end
-
-				if part:IsA("MeshPart") and part.Name:lower():match("^egg%s*%d*$") then
-					local prompt = part:FindFirstChildOfClass("ProximityPrompt")
-					if prompt and prompt.Enabled then
-						HRP.CFrame = part.CFrame + Vector3.new(0, 3, 0)
-						task.wait(0.3)
-						fireproximityprompt(prompt)
-						repeat task.wait(0.1) until not prompt.Enabled or not prompt:IsDescendantOf(game)
-						task.wait(0.3)
-					end
-				end
-			end
-
-			-- Reconnect
-			for _, v in pairs(ReplicatedStorage:WaitForChild("d8L"):GetChildren()) do
-				if v:IsA("RemoteEvent") then
-					pcall(function()
-						v:FireServer()
-					end)
-				end
-			end
-
-			running = false
-			SaveSetting(running)
-			ToggleButton.Text = "Auto Collect: OFF"
-		end)
+		StartCollect()
 	end
 end)
 
--- Auto-run if saved state was ON
+-- Auto-start if last session was ON
 if running then
-	ToggleButton:Activate()
+	StartCollect()
 end
