@@ -23,24 +23,22 @@ local function CollectEggs()
 	local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 	local HRP = Character:WaitForChild("HumanoidRootPart")
 
-	local eggs = {}
-	for _, part in pairs(workspace:GetDescendants()) do
-		if part:IsA("MeshPart") and part.Name:lower():match("^egg%s*%d*$") and IsMatchingEgg(part) then
-			local prompt = part:FindFirstChildOfClass("ProximityPrompt")
-			if prompt and prompt.Enabled then
-				table.insert(eggs, {Part = part, Prompt = prompt})
+	while true do
+		local found = false
+		for _, part in pairs(workspace:GetDescendants()) do
+			if part:IsA("MeshPart") and part.Name:lower():match("^egg%s*%d*$") and IsMatchingEgg(part) then
+				local prompt = part:FindFirstChildOfClass("ProximityPrompt")
+				if prompt and prompt.Enabled then
+					found = true
+					HRP.CFrame = part.CFrame + Vector3.new(0, 3, 0)
+					task.wait(0.3)
+					fireproximityprompt(prompt)
+					repeat task.wait(0.1) until not prompt.Enabled or not prompt:IsDescendantOf(game)
+					task.wait(0.3)
+				end
 			end
 		end
-	end
-
-	for _, data in ipairs(eggs) do
-		if not running then break end
-		local part, prompt = data.Part, data.Prompt
-		HRP.CFrame = part.CFrame + Vector3.new(0, 3, 0)
-		task.wait(0.3)
-		fireproximityprompt(prompt)
-		repeat task.wait(0.1) until not prompt.Enabled or not prompt:IsDescendantOf(game)
-		task.wait(0.3)
+		if not found then break end
 	end
 end
 
@@ -55,7 +53,7 @@ local function TeleportAndCollect()
 		local args = {zone}
 		local tp = ReplicatedStorage:WaitForChild("d8L"):WaitForChild("781d4ddc-e915-4b41-b2ff-a51cec5a69be")
 		tp:FireServer(unpack(args))
-		task.wait(5) -- wait for map to load
+		task.wait(5)
 		CollectEggs()
 	end
 
