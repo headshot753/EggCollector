@@ -8,12 +8,8 @@ local FILTER_FILE = "egg_filter.txt"
 local running = pcall(function() return readfile(SETTINGS_FILE) == "true" end) and readfile(SETTINGS_FILE) == "true"
 local eggFilter = pcall(function() return readfile(FILTER_FILE) end) and readfile(FILTER_FILE) or "All"
 
--- Load and wait for Rayfield
-local Rayfield = nil
-pcall(function()
-	Rayfield = loadstring(game:HttpGet('https://sirius.menu/sirius'))()
-end)
-repeat task.wait() until Rayfield and Rayfield.CreateWindow
+-- ✅ Working Rayfield Source
+local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Rayfield/main/source.lua"))()
 
 local Window = Rayfield:CreateWindow({
 	Name = "Egg Collector",
