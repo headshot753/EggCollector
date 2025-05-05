@@ -4,13 +4,27 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local SETTINGS_FILE = "egg_autocollect_settings.txt"
 local FILTER_FILE = "egg_filter.txt"
+
 local running = pcall(function() return readfile(SETTINGS_FILE) == "true" end) and readfile(SETTINGS_FILE) == "true"
 local eggFilter = pcall(function() return readfile(FILTER_FILE) end) and readfile(FILTER_FILE) or "All"
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/sirius'))()
-local Window = Rayfield:CreateWindow({ Name = "Egg Collector", ConfigurationSaving = { Enabled = true, FolderName = nil, FileName = "EggSettings" }})
-local MainTab = Window:CreateTab("Main")
+-- Load and wait for Rayfield
+local Rayfield = nil
+pcall(function()
+	Rayfield = loadstring(game:HttpGet('https://sirius.menu/sirius'))()
+end)
+repeat task.wait() until Rayfield and Rayfield.CreateWindow
 
+local Window = Rayfield:CreateWindow({
+	Name = "Egg Collector",
+	ConfigurationSaving = {
+		Enabled = true,
+		FolderName = nil,
+		FileName = "EggSettings"
+	}
+})
+
+local MainTab = Window:CreateTab("Main")
 local Toggle, Dropdown
 
 local function SaveSetting(state)
